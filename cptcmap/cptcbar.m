@@ -1,10 +1,14 @@
 function h = cptcbar(ax, map, loc, flag, varargin)
 % Create colorbar associated with cpt colormap
 %
-% Due to uneven spacing, regular colorbars are sometimes inappropriate for
-% colormaps applied via cptcmap.  This function offers an alternative.
-%
 % h = cptcbar(ax, map, loc, flag)
+%
+% This function creates a pseudo-colorbar, which labels the color limits
+% based on the data in a .cpt color palette table.  It is designed to be
+% used alongside cptcmap.m, usually with direct mapping.
+%
+% Note that this pseudo-colorbar is not actually linked to the color
+% properties of an axis (clim, etc).  
 %
 % Input variables:
 %
@@ -12,20 +16,32 @@ function h = cptcbar(ax, map, loc, flag, varargin)
 % 
 %   map:    name of colormap used  
 %
-%   loc:    location of colormap (see colormap.m)
+%   loc:    location of colorbar (see colorbar.m)
 %
 %   flag:   if true, evenly space the colors.  If false, space according to
 %           values of each color block
 %
-% Optional input arguments
+% Optional input arguments (passed as parameter/value pairs)
 %
 %   tkint:  Label every x intervals [1]
+%
+% Output variables:
+%
+%   h:      structure of handles
+%
+%           ax: handle to the pseudo-colorbar axis
+%
+%           p:  handle to the pseudo-colorbar patches
+%
+%           cb: handle to a real colorbar for the axis, whose visibility is
+%               turned off.  This is kept so that axis resizing associated
+%               with a colorbar can be undone; if you want to delete the
+%               pseudo-colorbar, delete both h.ax and h.cb.
 
 % Copyright 2014 Kelly Kearney
 
 Opt.tkint = 1;
 Opt = parsepv(Opt, varargin);
-
 
 [cmap, lims, ticks, bfncol, ctable] = cptcmap(map);
 
@@ -48,7 +64,7 @@ else
     y2 = ctable(:,5);
     tk = [ctable(:,1); ctable(end,5)];
 end
-tklbl = cellstr(num2str([ctable(:,1); ctable(end,5)]));
+tklbl = strtrim(cellstr(num2str([ctable(:,1); ctable(end,5)])));
 
 islbl = ismember(1:length(tk), 1:Opt.tkint:length(tk));
 [tklbl{~islbl}] = deal(' ');
@@ -74,8 +90,20 @@ switch lower(loc)
         set(h.ax, 'xtick', tk, 'xticklabel', tklbl, 'xlim', minmax(tk), ...
             'ylim', [0 1], 'ytick', []);
 end
+
+switch lower(loc)
+    case {'eastoutside', 'west'}
+        set(h.ax, 'yaxislocation', 'right');
+    case {'south', 'northoutside'}
+        set(h.ax, 'xaxislocation', 'top');
+end
+
+set(h.ax, 'layer', 'top');
+
 set(h.p, 'edgecolor', 'none');
 set(cb, 'visible', 'off');
+
+h.cb = cb;
 
 
 
