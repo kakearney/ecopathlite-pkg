@@ -27,13 +27,13 @@ For further reference, and some examples of the ensemble idea in action, see the
 This package includes 3 top-level functions (along with several additional m-files that these 3 rely on)
 * `ecopathlite.m`: Reproduces the Ecopath calculation for a single model
 ```
-Ewein = mdb2ewein(file)
-[Ewein, A] = mdb2ewein(file)
+Ep = ecopathlite(Ewein)
+[Ep, flag, fillinfo, sc] = ecopathlite(Ewein)
 ```
 * `mdb2ewein.m`: Imports a EwE6 .ewemdb file into Matlab (relies on the [mdbtools utilities](https://github.com/brianb/mdbtools) to read data)
 ```
-Ep = ecopathlite(Ewein)
-[Ep, flag, fillinfo, sc] = ecopathlite(Ewein)
+Ewein = mdb2ewein(file)
+[Ewein, A] = mdb2ewein(file)
 ```
 * `createensemble.m`: Creates an ensemble of Ecopath models, based on parameter uncertainty pedigree values.
 ```
