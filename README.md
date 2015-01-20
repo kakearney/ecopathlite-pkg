@@ -40,6 +40,8 @@ Ewein = mdb2ewein(file)
 Set = createensemble(Ewein, pedigree, nset)
 ```
 
+See function help for full description of input and output variables.
+
 ### Examples of use
 
 #### Ecopath mass-balance for a single model
