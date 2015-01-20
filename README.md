@@ -1,42 +1,46 @@
-## ecopathlite.m Documentation
+## A Matlab implementation of Ecopath
 
-### Introduction
+[Ecopath with Ecosim](http://www.ecopath.org) is a popular ecosystem modeling tool, used primarily in the fisheries modeling community. This Matlab package reproduces the main mass-balance calculation performed by the Ecopath portion of the EwE model, and also offers a few additional tools to examine uncertainty associated with Ecopath model parameters.
 
-[Ecopath with Ecosim](http://www.ecopath.org) is a popular ecosystem modeling tool, used primarily in the fisheries modeling community. This function reproduces the main calculation performed by the Ecopath portion of the EwE model.
+### The Ecopath algorithm (`ecopathlite.m`)
 
-Ecopath is used to calculate a snapshot of an ecosystem, including the biomass of all functional groups (living groups, fishing gears, and detrital pools) and the fluxes between these groups.  This function is a bare-bones version of the algorithm; it is not really meant to be used to set up and balance a model for the first time, since it does not provide any of the visual checks on the results (e.g. whether EE values are > 1, etc); use the original Ecopath software if you're looking for this type of behavior.  It simply provides the initial mass-balance calculations, in a stripped-down, easy-to-automate format.
+The Ecopath algorithm is used to calculate a snapshot of an ecosystem, including the biomass of all functional groups (living groups, fishing gears, and detrital pools) and the fluxes between these groups.  This function is a bare-bones version of the algorithm; it is not really meant to be used to set up and balance a model for the first time, since it does not provide any of the visual checks on the results (e.g. whether EE values are > 1, etc); use the original Ecopath software if you're looking for this type of behavior.  This simply provides the initial mass-balance calculations, in a stripped-down, easy-to-automate format.
 
 For more information on the Ecopath concept, see:
 
 * Christensen, V. & Pauly, D. ECOPATH II--a software for balancing steady-state ecosystem models and calculating network characteristics. Ecological Modelling 61, 169-185 (1992).  
 * Christensen, V. & Walters, C. J. Ecopath with Ecosim: methods, capabilities and limitations. Ecological Modelling 172, 109-139 (2004).
 
+### Building an ensemble of Ecopath models (`createensemble.m`)
+
 The construction of a typical Ecopath model involves the compilation of a large amount of population-related data, including biomass, production rates, consumption rates, diet fractions, growth efficiencies, and assimilation efficiencies for each functional group included in the model. These data typically come from a wide variety of sources, ranging from high-quality scientific surveys to fisheries landing data, empirical relationships, and other models. The uncertainty values on these numbers can be very high, up to or beyond an order of magnitude from the point estimates, and accurate measurement of these uncertainties is rare.
 
-I developed an additional routine, `createensemble.m`, in order to incorporate this uncertainty into some of my research (which focuses on end-to-end modeling of ocean ecosystems, and often couples Ecopath-derived concepts with physical and biogeochemical models).  For further reference, and some examples of the ensemble idea in action, see the following publications:
+I developed an additional routine, `createensemble.m`, in order to incorporate this uncertainty into some of my research (which focuses on end-to-end modeling of ocean ecosystems, and often couples Ecopath-derived concepts with physical and biogeochemical models).  This routine draws Ecopath parameters from probability distributions, based on initial point estimates and data pedigree values (i.e. uncertainty quantified based on data source), checking that the resulting parameter combinations meet the Ecopath mass-balance requirement.
+
+For further reference, and some examples of the ensemble idea in action, see the following publications:
 
 - K. A. Kearney, C. Stock, K. Aydin, and J. L. Sarmiento, “Coupling planktonic ecosystem and fisheries food web models for a pelagic ecosystem: Description and validation for the subarctic Pacific,” Ecol. Modell., vol. 237-238, pp. 43-62, (2012).
 - K. A. Kearney, C. Stock, and J. L. Sarmiento, “Amplification and attenuation of increased primary production in a marine food web,” Mar. Ecol. Prog. Ser., vol. 491, pp. 1-14, (2013).
 
+### Syntax
 
 This package includes 3 top-level functions (along with several additional m-files that these 3 rely on)
 * `ecopathlite.m`: Reproduces the Ecopath calculation for a single model
-* `mdb2ewein.m`: Imports a EwE6 .ewemdb file into Matlab (UNIX/Linux/Mac only because it relies on the [mdbtools utilities](http://mdbtools.sourceforge.net/) to read data)
-* `createensemble.m`: Creates an ensemble of Ecopath models, based on parameter uncertainty pedigree values.
-
-### Syntax
-
 ```
 Ewein = mdb2ewein(file)
 [Ewein, A] = mdb2ewein(file)
-
+```
+* `mdb2ewein.m`: Imports a EwE6 .ewemdb file into Matlab (relies on the [mdbtools utilities](https://github.com/brianb/mdbtools) to read data)
+```
 Ep = ecopathlite(Ewein)
 [Ep, flag, fillinfo, sc] = ecopathlite(Ewein)
-
+```
+* `createensemble.m`: Creates an ensemble of Ecopath models, based on parameter uncertainty pedigree values.
+```
 Set = createensemble(Ewein, pedigree, nset)
 ```
 
-### Examples
+### Examples of use
 
 #### Ecopath mass-balance for a single model
 
@@ -102,7 +106,7 @@ That's it!  You can browse through the other fields of the `Ep` structure to see
 
 If your model already includes input pedigree data, those numbers can be found in the EcopathGroupPedigree dataset, part of the second output structure returned by `mdb2ewein`.  However, I haven't yet written any tools to rearrange this data into the proper format, so it's probably easiest to just set your pedigree array up manually.
 
-The `pedigree` input variable should be an ngroup x 6 array, where ngroup is the number of groups in your model, with columns corresponding to the B, PB, QB, DC, EE, and GE variables, respectively.  For this example, lets assume a 20% uncertainty on all biomass (B), production rate (PB), and growth efficiency (GE) variables, and a 10% uncertainty for the diet composition components.  I like to use a small value as a placeholder for those variables that are unknown in the original model (and hence do not need a corresponding pedigree value, in this case, QB and EE:
+The `pedigree` input variable should be an ngroup x 6 array, where ngroup is the number of groups in your model, with columns corresponding to the B, PB, QB, DC, EE, and GE variables, respectively.  For this example, lets assume a 20% uncertainty on all biomass (B), production rate (PB), and growth efficiency (GE) variables, and a 10% uncertainty for the diet composition components.  The pedigree values assigned to unknown parameters (in this case, all QB and EE values) will not be used; I like to use a small number as a placeholder for these.
 
 ```matlab
 ped = repmat([0.2 0.2 0.001 0.1 0.001 0.2], In.ngroup, 1);
