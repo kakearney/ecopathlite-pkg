@@ -25,7 +25,7 @@ For further reference, and some examples of the ensemble idea in action, see the
 ### Syntax
 
 This package includes 3 top-level functions (along with several additional m-files that these 3 rely on)
-* `ecopathlite.m`: Reproduces the Ecopath calculation for a single model
+* `ecopathlite.m`: Reproduces the Ecopath calculation for a single model, or for an ensemble of Ecopath models with the same structure (i.e. same functional groups, predator-prey links, etc)
 ```
 Ep = ecopathlite(Ewein)
 [Ep, flag, fillinfo, sc] = ecopathlite(Ewein)
@@ -106,12 +106,12 @@ That's it!  You can browse through the other fields of the `Ep` structure to see
 
 #### Building an ensemble of Ecopath models
 
-If your model already includes input pedigree data, those numbers can be found in the EcopathGroupPedigree dataset, part of the second output structure returned by `mdb2ewein`.  However, I haven't yet written any tools to rearrange this data into the proper format, so it's probably easiest to just set your pedigree array up manually.
+The `pedigree` input variable should be an ngroup x 6 array, where ngroup is the number of groups in your model, with columns corresponding to the B, PB, QB, DC, EE, and GE variables, respectively.  The mdb2ewein.m function will return a predigree array (with one extra column, for catch, which I ignore... you can pass this array directly, since createensemble.m ignores any extra columns in the pedigree input array).  If your model doesn't have pedigree data stored with it (like this example), then you can build this array manually.
 
-The `pedigree` input variable should be an ngroup x 6 array, where ngroup is the number of groups in your model, with columns corresponding to the B, PB, QB, DC, EE, and GE variables, respectively.  For this example, lets assume a 20% uncertainty on all biomass (B), production rate (PB), and growth efficiency (GE) variables, and a 10% uncertainty for the diet composition components.  The pedigree values assigned to unknown parameters (in this case, all QB and EE values) will not be used; I like to use a small number as a placeholder for these.
+For this example, lets assume a 20% uncertainty on all biomass (B), production rate (PB), and growth efficiency (GE) variables, and a 10% uncertainty for the diet composition components.  The pedigree values assigned to unknown parameters (in this case, all QB and EE values) will not be used; I like to assign a NaN to these values (which tells createensemble.m not to vary these parameters from their initial point value), just to be safe.
 
 ```matlab
-ped = repmat([0.2 0.2 0.001 0.1 0.001 0.2], In.ngroup, 1);
+ped = repmat([0.2 0.2 NaN 0.1 NaN 0.2], In.ngroup, 1);
 
 ```
 
@@ -131,9 +131,33 @@ For memory purposes, this function returns only the parameter values that vary b
 
 ```matlab
 In2 = subecopathens(In, Set.x, Set.idx);
-Ep2 = arrayfun(@ecopathlite, In2);
+displayecopath(In2(1))
+```
+```
+   Name          TL  HA BH  B        PB      QB  EE  GE       GS  DI 
+1: Other fish         1      6.09372  0.5318         0.204044 0.2 0
+2: Norway Pout        1     0.913908 1.14491         0.289519 0.2 0
+3: Krill              1      1.04301 5.03851         0.258823 0.2 0
+4: Copepods           1      2.26621 37.3658         0.266372 0.2 0
+5: Phytoplankton      1      4.41425 229.472                    0 0
+6: Detritus           1      9.69848                            0 0
 ```
 
+The ecopathlite.m function can now calculate balance for an entire ensemble at once; this saves time over the previous necessity to loop over each (since setup calculations are the same for all ensemble members):
+
+```matlab
+Ep2 = ecopathlite(Set.Ewein, 'x', Set.x, 'idx', Set.idx);
+displayecopath(In2(1), Ep2(1))
+```
+```
+   Name          TL      HA BH B        PB      QB  EE        GE       GS  DI 
+1: Other fish     3.14461 1  6  6.09372  0.5318 2.5  0.333333 0.204044 0.2 0
+2: Norway Pout      3.607 1  1 0.913908 1.14491   4    0.7765 0.289519 0.2 0
+3: Krill                3 1  1  1.04301 5.03851  20    0.7496 0.258823 0.2 0
+4: Copepods             2 1  2  2.26621 37.3658 160  0.434087 0.266372 0.2 0
+5: Phytoplankton        1 1  5  4.41425 229.472   0     0.288        0   0 0
+6: Detritus             1 1 10  9.69848       0   0 0.0384362        0   0 0
+```
 
 
 
