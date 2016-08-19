@@ -1,3 +1,7 @@
+# DEPRECATED
+
+This project is now deprecated, and has been replaced by the [ecopath_matlab package](https://github.com/kakearney/ecopath_matlab-pkg).  Please update; this code will no longer be maintained.
+
 ## A Matlab implementation of Ecopath
 
 [Ecopath with Ecosim](http://www.ecopath.org) is a popular ecosystem modeling tool, used primarily in the fisheries modeling community. This Matlab package reproduces the main mass-balance calculation performed by the Ecopath portion of the EwE model, and also offers a few additional tools to examine uncertainty associated with Ecopath model parameters.
