@@ -1,6 +1,6 @@
 # DEPRECATED
 
-This project is now deprecated, and has been replaced by the [ecopath_matlab package](https://github.com/kakearney/ecopath_matlab-pkg).  Please update; this code will no longer be maintained.
+This project is now deprecated, and has been replaced by the [ecopath_matlab package](https://github.com/kakearney/ecopath_matlab-pkg).  This code will no longer be maintained or updated.
 
 ## A Matlab implementation of Ecopath
 
